@@ -1,0 +1,49 @@
+---
+- name: Searching current version
+  shell: "curl -s https://build.syncthing.net/job/strelaysrv/lastSuccessfulBuild/artifact/ -o - | perl -l -ne \"m/(strelaysrv-linux-{{ arch }}-v.*?\\.tar\\.gz)/ig && print $&\""
+  register: versionvar
+  become: false
+  changed_when: false
+  args:
+      warn: no
+
+- name: Checking if bullshit data was returned
+  fail:
+      msg="Yeah. Definitly bullshit. Got {{ versionvar.stdout }}"
+  when: versionvar.stdout|length == 0
+  become: false
+
+- name: Downloading server files
+  get_url:
+      url: "https://build.syncthing.net/job/strelaysrv/lastSuccessfulBuild/artifact/{{ versionvar.stdout }}"
+      dest: "{{ ansible_env.PWD }}/strelay-server.tar.gz"
+  become: false
+
+- name: Creating server directory
+  file:
+      path: strelay-server
+      state: directory
+  become: false
+
+- name: Downloading and extracting server
+  shell: "tar xfz strelay-server.tar.gz -C strelay-server --strip 1"
+  become: false
+  args:
+      warn: no
+
+- name: Generating systemd unit file
+  template:
+      src: systemd-unit-file.j2
+      dest: /etc/systemd/system/syncthing-relay.service
+      owner: root
+      group: root
+  become: true
+
+- name: Ensure syncthing relay server is started at boot
+  systemd:
+      name: syncthing-relay
+      state: started
+      enabled: true
+      masked: no
+      daemon_reload: true
+  become: true

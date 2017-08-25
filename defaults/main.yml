@@ -1,0 +1,6 @@
+---
+arch: amd64
+provided_by: "https://blog.veloc1ty.de"
+user: strelay
+homepath: /home/strelay/strelay-server
+listen_ip: 31.220.45.3

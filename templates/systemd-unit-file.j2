@@ -1,0 +1,18 @@
+#
+# Managed by ansible
+# Role: syncthing-relay-server
+#
+[Unit]
+Description=Syncthing relay server
+After=network-online.service
+
+[Service]
+User={{ user }}
+Group={{ user }}
+WorkingDirectory={{ homepath }}
+ExecStart={{ homepath }}/strelaysrv -protocol tcp4 -listen 31.220.45.3:22067 -provided-by "{{ provided_by }}"
+RestartSec=15
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
